@@ -1,49 +1,44 @@
 "use client";
 
-import { DeckForm } from "@/components/deck-form";
-import { ModeToggle } from "@/components/mode-toggle";
-import { Button } from "@/components/ui/button";
+import type React from "react";
+
+import { useState } from "react";
 import {
   Card,
+  CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardFooter,
-  CardContent,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Plus,
+  BookOpen,
+  Download,
+  Upload,
+  Trash2,
+  Edit,
+  Play,
+} from "lucide-react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { useStorage } from "@/hooks/use-storage";
-import { Deck } from "@/lib/storage";
-import { ScrollArea } from "@radix-ui/react-scroll-area";
-import { Plus } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useStorage } from "@/hooks/use-storage";
+import { LoadingCard } from "@/components/loading-card";
+import { DeckForm } from "@/components/deck-form";
+import type { Deck } from "@/lib/storage";
 
-export function LoadingCard() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-background text-foreground">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">Shiru</CardTitle>
-          <CardDescription>Flashcard learning app</CardDescription>
-        </CardHeader>
-
-        <CardContent className="flex flex-col gap-4 items-center justify-center">
-          Loading
-        </CardContent>
-        <CardFooter className="flex justify-end">
-          <ModeToggle />
-        </CardFooter>
-      </Card>
-    </main>
-  );
-}
-
-export default function Home() {
+export default function Dashboard() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingDeck, setEditingDeck] = useState<Deck | null>(null);
-  const { decks, isLoading, createDeck, updateDeck, deleteDeck, importDeck } =
-    useStorage();
+  const {
+    decks,
+    isLoading,
+    isAvailable,
+    createDeck,
+    updateDeck,
+    deleteDeck,
+    importDeck,
+  } = useStorage();
 
   const handleCreateDeck = (name: string, description: string) => {
     if (createDeck(name, description)) {
@@ -92,36 +87,46 @@ export default function Home() {
   };
 
   if (isLoading) {
-    return <LoadingCard />;
+    return (
+      <LoadingCard
+        title="Loading..."
+        description="Loading your flashcard decks..."
+      />
+    );
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-background text-foreground">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">Shiru</CardTitle>
-          <CardDescription>Flashcard learning app</CardDescription>
-        </CardHeader>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-3 text-foreground">
+            Flashcard Study App
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Create, manage, and study your flashcard collections
+          </p>
+        </div>
 
-        <CardContent className="flex flex-col gap-4 items-center justify-center">
-          <ScrollArea className="w-full h-96">
-            {decks.map((deck) => (
-              <Button key={deck.id} size="lg" asChild>
-                <Link
-                  className="w-full max-w-xs text-lg py-6"
-                  href={`/deck/${deck.id}`}
-                >
-                  {deck.name}
-                  <p className="text-secondary-foreground">
-                    {deck.description}
-                  </p>
-                </Link>
-              </Button>
-            ))}
-          </ScrollArea>
+        <div className="flex justify-center mb-8 gap-3">
+          <input
+            type="file"
+            accept=".json"
+            onChange={handleImport}
+            className="hidden"
+            id="import-deck"
+          />
+          <Button
+            variant="outline"
+            onClick={() => document.getElementById("import-deck")?.click()}
+            disabled={!isAvailable}
+            className="rounded-md"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Import Deck
+          </Button>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="rounded-xl px-6">
+              <Button disabled={!isAvailable} className="rounded-md px-6">
                 <Plus className="w-4 h-4 mr-2" />
                 Create New Deck
               </Button>
@@ -134,26 +139,119 @@ export default function Home() {
               submitLabel="Create Deck"
             />
           </Dialog>
-        </CardContent>
+        </div>
 
-        <CardFooter className="flex justify-end">
-          <ModeToggle />
-        </CardFooter>
-      </Card>
-
-      <Dialog open={!!editingDeck} onOpenChange={() => setEditingDeck(null)}>
-        {editingDeck && (
-          <DeckForm
-            title="Edit Deck"
-            description="Update your deck name and description"
-            initialName={editingDeck.name}
-            initialDescription={editingDeck.description}
-            onSubmit={handleUpdateDeck}
-            onCancel={() => setEditingDeck(null)}
-            submitLabel="Update Deck"
-          />
+        {decks.length === 0 ? (
+          <div className="center-container">
+            <Card className="main-card text-center">
+              <CardContent className="pt-6">
+                <BookOpen className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-xl font-semibold mb-2">No decks yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  Create your first flashcard deck to get started
+                </p>
+                <Button
+                  onClick={() => setIsCreateOpen(true)}
+                  className="rounded-md"
+                  disabled={!isAvailable}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Your First Deck
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+            {decks.map((deck) => (
+              <Card
+                key={deck.id}
+                className="rounded-2xl hover:shadow-lg transition-all duration-200 border-border/50"
+              >
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg truncate text-foreground">
+                    {deck.name}
+                  </CardTitle>
+                  {deck.description && (
+                    <CardDescription className="line-clamp-2">
+                      {deck.description}
+                    </CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+                    <span>{deck.cards.length} cards</span>
+                    <span>
+                      Updated {new Date(deck.updatedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Link href={`/deck/${deck.id}`} className="flex-1">
+                        <Button variant="outline" className="w-full rounded-md">
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Cards
+                        </Button>
+                      </Link>
+                      {deck.cards.length > 0 && (
+                        <Link href={`/quiz/${deck.id}`} className="flex-1">
+                          <Button className="w-full rounded-md">
+                            <Play className="w-4 h-4 mr-2" />
+                            Study
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditingDeck(deck)}
+                        className="flex-1 rounded-md"
+                        disabled={!isAvailable}
+                      >
+                        Rename
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleExport(deck)}
+                        className="flex-1 rounded-md"
+                      >
+                        <Download className="w-4 h-4 mr-1" />
+                        Export
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteDeck(deck.id)}
+                        className="text-destructive hover:text-destructive rounded-md"
+                        disabled={!isAvailable}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
-      </Dialog>
-    </main>
+
+        <Dialog open={!!editingDeck} onOpenChange={() => setEditingDeck(null)}>
+          {editingDeck && (
+            <DeckForm
+              title="Edit Deck"
+              description="Update your deck name and description"
+              initialName={editingDeck.name}
+              initialDescription={editingDeck.description}
+              onSubmit={handleUpdateDeck}
+              onCancel={() => setEditingDeck(null)}
+              submitLabel="Update Deck"
+            />
+          )}
+        </Dialog>
+      </div>
+    </div>
   );
 }

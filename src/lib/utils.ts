@@ -16,3 +16,20 @@ export function shuffleArray<T>(array: T[]): T[] {
 export function pickRandomElement<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)];
 }
+
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null;
+
+  return (...args: Parameters<T>) => {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+
+    timeout = setTimeout(() => {
+      func(...args);
+    }, wait);
+  };
+}

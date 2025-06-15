@@ -46,34 +46,34 @@ export function DeckForm({
         <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
       <div className="space-y-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="deck-name">Deck Name</Label>
           <Input
             id="deck-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter deck name"
-            className="rounded-xl"
+            className="rounded-md"
           />
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="deck-description">Description (Optional)</Label>
           <Textarea
             id="deck-description"
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
             placeholder="Enter deck description"
-            className="rounded-xl"
+            className="rounded-md"
           />
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onCancel} className="rounded-xl">
+          <Button variant="outline" onClick={onCancel} className="rounded-md">
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!name.trim()}
-            className="rounded-xl"
+            className="rounded-md"
           >
             {submitLabel}
           </Button>
